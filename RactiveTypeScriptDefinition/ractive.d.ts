@@ -1,70 +1,91 @@
-﻿// Type definitions for Ractive 0.5.5
+// Type definitions for Ractive 0.4.0
 // Project: http://ractivejs.org
-// Definitions by: Han Lin Yap <http://yap.nu>
-// Definitions: https://github.com/codler/Ractive-TypeScript-Definition
-// Version: 0.5.5-3+2014-09-08
+// Adapted from the work of Han Lin Yap <http://yap.nu>: https://github.com/codler/Ractive-TypeScript-Definition
+// Date: 2014-09-24
 
-interface RactiveNode extends HTMLElement {
-	_ractive: any;
+
+// DICTIONARIES: To be replaced later in the generated .fs file
+interface NumberDic {
+    [key: string]: number;
 }
 
+interface StringDic {
+    [key: string]: string;
+}
+
+interface HTMLElementDic {
+    [key: string]: HTMLElement;
+}
+
+interface RactiveEasingDic {
+    [key: string]: (x: number)=>number;
+}
+
+interface RactiveAdaptorDic {
+    [key: string]: RactiveAdaptor;
+}
+
+interface RactiveStaticDic {
+    [key: string]: RactiveStatic;
+}
+
+interface RactiveParsedTemplateDic {
+    [key: string]: RactiveParsedTemplate;
+}
+
+interface RactiveDecoratorPluginDic {
+    [key: string]: (node: HTMLElement, arg: any) => RactiveTeardown;
+}
+
+interface RactiveEventPluginDic {
+    [key: string]: (node: HTMLElement, fire: (ev: RactiveEvent) => any) => RactiveTeardown;
+}
+
+interface RactiveTransitionPluginDic {
+    [key: string]: (t: RactiveTransition, arg: any) => void;
+}
+// ----------------------------------------------------------------------
+
 // It's functionally identical to the ES6 promise (as currently spec'd) except that Promise.race and Promise.cast are not currently implemented.
-interface RactivePromise extends Object {
-	// TODO: Implement interface or wait until typescript include native Promise definition.
+interface RactivePromise {
+    then(onFullfilled: (value: any) => any, onRejected: (reason: string) => any): RactivePromise; // TODO: 'reason' may actually be any value, change?
+    catch(onRejected: (reason: string) => any): RactivePromise;
+}
+
+interface RactivePromiseStatic  {
+    all(iterable: RactivePromise[]): RactivePromise;
+    resolve(value: any): RactivePromise;
+    reject(reason: string): RactivePromise;
 }
 
 interface RactiveAnimationPromise extends RactivePromise {
 	stop(): void; // TODO: void?
 }
 
-interface RactiveAdaptorPlugin extends Object {
-	// TODO: 
+interface RactiveTeardown {
+    teardown: () => void;
 }
 
-interface RactiveComponentPlugin extends RactiveStatic {
-	// TODO: 
+interface RactiveParsedTemplate {
 }
 
-interface RactiveDecoratorPlugin {
-	(node: HTMLElement, ...args: any[]): {
-		// TODO: undocumented GH-429
-		update?: (...args: any[]) => void;
-		teardown: () => void;
-	}
+interface RactiveFindOptions {
+    live: boolean;  // default false
 }
 
-interface RactiveEventPlugin extends Function {
-	// TODO: 
+interface RactiveMergeOptions {
+    compare: any;   // TODO: Boolean or String or Function
 }
 
-interface RactiveTransitionPlugin {
-	(t: RactiveTransition, params: Object): void;
-}
 
-interface RactiveAdaptorPlugins {
-	[key: string]: RactiveAdaptorPlugin;
-}
-
-interface RactiveComponentPlugins {
-	[key: string]: RactiveComponentPlugin;
-}
-
-interface RactiveDecoratorPlugins {
-	[key: string]: RactiveDecoratorPlugin;
-}
-
-interface RactiveEventPlugins {
-	[key: string]: RactiveEventPlugin;
-}
-
-interface RactiveTransitionPlugins {
-	[key: string]: RactiveTransitionPlugin;
+interface RactiveAdaptor {
+    filter: (object: any, keypath?: string, ractive?: Ractive) => boolean;
+    wrap: (ractive: Ractive, object: any, keypath: string, prefixer: (object: any)=>any) => void;
 }
 
 interface RactiveEvent {
-	context: any;
-	// TODO: unclear in documantation
-	index: Object;
+	context: any;       
+    index: NumberDic;
 	keypath: string;
 	node: HTMLElement;
 	original: Event;
@@ -81,25 +102,25 @@ interface RactiveTransition {
 	name: string;
 	node: HTMLElement;
 
-	animateStyle(prop: string, value: any, options: RactiveTransitionAnimateOptions, complete: Function): void;
-	animateStyle(props: Object, options: RactiveTransitionAnimateOptions, complete: Function): void;
+	animateStyle(prop: string, value: any, options: RactiveTransitionAnimateOptions, complete: ()=>void): void;
+	animateStyle(props: any, options: RactiveTransitionAnimateOptions, complete: ()=>void): void;
 	// Default false
 	complete(noReset?: boolean): void;
 	getStyle(prop: string): string;
-	getStyle(props: string[]): Object;
-	processParams(params: any, defaults?: Object): Object;
+	getStyle(props: string[]): any;
+	processParams(params: any, defaults?: any): any;
 	resetStyle(): void;
 	setStyle(prop: string, value: any): RactiveTransition;
-	setStyle(props: Object): RactiveTransition;
+	setStyle(props: any): RactiveTransition;
 }
 
 interface RactiveTransitionAnimateOptions {
-	// TODO: Do it have default value?
+	// TODO: Does it have default value?
 	duration: number;
 	// Any valid CSS timing function
 	// Default 'linear'
 	easing?: string;
-	// TODO: Do it have default value?
+	// TODO: Does it have default value?
 	delay: number;
 }
 
@@ -116,6 +137,8 @@ interface RactiveAnimateOptions {
 interface RactiveObserveOptions {
 	// Default Ractive
 	context?: any;
+	// Default false
+	debug?: boolean;
 	// Default false
 	defer?: boolean;
 	// Default true
@@ -136,107 +159,58 @@ interface RactiveSanitizeOptions {
 }
 
 interface RactiveNewOptions {
-	/**
-	 * @type List of mixed string or Adaptor
-	 */
-	adapt?: any[];
-
-	adaptors?: RactiveAdaptorPlugins;
-
-	/**
-	 * Default false
-	 * @type boolean or any type that option `el` accepts (HTMLElement or String or jQuery-like collection)
-	 */
-	append?: any;
-
-	complete?: Function;
-	components?: RactiveComponentPlugins;
-	computed?: Object;
-	// Since 0.5.5
-	// TODO: unclear in documantation
-	css?: string;
-
-	/**
-	 * TODO: Question - When is data Array or String?
-	 *
-	 * @type Object, Array, String or Function
-	 */
-	// TODO: undocumented type Function
-	data?: any;
-
-	decorators?: RactiveDecoratorPlugins;
-	/**
-	 * @type [open, close]
-	 */
-	delimiters?: string[];
-
-	// TODO: String or Function
-	easing?: any;
-
+    adapt?: RactiveAdaptor[];       // The array or hash could also contain strings referencing
+    adaptors?: RactiveAdaptorDic;   // to adaptors registered in RactiveStatic.adaptors
+	complete?: ()=>void;
+    components?: RactiveStaticDic;
+    computed?: StringDic;           // TODO: May also contain functions, but the compact syntax is much easier to use in FunScript
+    css?: string;
+    data?: any;                     
+    decorators?: RactiveDecoratorPluginDic;
 	/**
 	 * @type HTMLElement or String or jQuery-like collection
 	 */
-	el?: any;
-	// TODO: undocumented in Initialisation options page
-	events?: RactiveEventPlugins;
-
-	// TODO: In next release
-	// TODO: undocumented GH-429
-	// interpolate
-
-	// Since 0.5.5
-	// TODO: unclear in documantation
-	interpolators?: { [key: string]: any; };
-
-	/**
-	 * any is same type as template
-	 */
-	partials?: { [key: string]: any; };
+	el?: string;
+    events?: RactiveEventPluginDic;
+    //interpolators?: any;
+    partials?: StringDic;                       // TODO: May also be a RactiveParsedTemplateDic
 	/**
 	 * Default false
 	 * @type Boolean or RactiveSanitizeOptions
 	 */
-	sanitize?: any;
-	/**
-	 * Default ['[[', ']]']
-	 * @type [open, close]
-	 */
-	staticDelimiters?: string[];
-	/**
-	 * Default ['[[[', ']]]']
-	 * @type [open, close]
-	 */
-	staticTripleDelimiters?: string[];
-	/**
-	 * @type String or (if preparsing "Ractive.parse") Array or Object
-	 */
-	template?: any;
-	transitions?: RactiveTransitionPlugins;
-	/**
-	 * @type [open, close]
-	 */
-	tripleDelimiters?: string[];
+    sanitize?: boolean;
+    template?: string;                          // TODO: May also be a RactiveParsedTemplate
+    transitions?: RactiveTransitionPluginDic;
+    transitionsEnabled?: boolean;
 
+	/**
+	 * @type [open, close]
+	 */
+    delimiters?: string[];
+    tripleDelimiters?: string[];
+    staticDelimiters?: string[];
+    staticTripleDelimiters?: string[];
+
+	// Default false. It may also be an anchor, see docs
+	append?: boolean;
+	// Default false
+    debug?: boolean;
 	// Default false
 	lazy?: boolean;
 	// Default false
 	magic?: boolean;
 	// Default true
 	modifyArrays?: boolean;
-	// Since 0.5.5
-	// TODO: unclear in documantation
-	// Default false
-	noCSSTransform?: boolean;
+    // Default false
+    noCssTransform?: boolean;
 	// Default false
 	noIntro?: boolean;
 	// Default false
 	preserveWhitespace?: boolean;
-	// Since 0.5.5
-	// Default true
-	stripComments?: boolean;
+    // Default true
+    stripComments?: boolean;
 	// Default true
 	twoway?: boolean;
-
 }
 
 interface RactiveExtendOptions extends RactiveNewOptions {
@@ -248,146 +222,93 @@ interface RactiveExtendOptions extends RactiveNewOptions {
 	isolated?: boolean;
 }
 
-// See ractive change log "All configuration options, except plugin registries, can be specified on Ractive.defaults and Component.defaults"
-interface RactiveDefaultsOptions extends RactiveExtendOptions {
-	// TODO: not correctly documented
-	// Default false
-	debug?: boolean;
-}
-
 /**
  * Static members of Ractive
  */
 interface RactiveStatic {
-	new (options: RactiveNewOptions): Ractive;
+    new (options: RactiveNewOptions): Ractive;
 
-	extend(options: RactiveExtendOptions): RactiveStatic;
+    extend(options: RactiveExtendOptions): RactiveStatic;
 
-	parse(template: string, options?: RactiveParseOptions): any;
+    parse(template: string, options?: RactiveParseOptions): RactiveParsedTemplate;
 
-	// TODO: undocumented
-	adaptors: RactiveAdaptorPlugins;
+    // TODO: undocumented
+    adaptors: RactiveAdaptorDic;
 
-	// TODO: undocumented
-	components: RactiveComponentPlugins;
+    // TODO: undocumented
+    components: RactiveStaticDic;
 
-	defaults: RactiveDefaultsOptions;
+    defaults: RactiveNewOptions;
 
-	// TODO: undocumented
-	decorators: RactiveDecoratorPlugins;
+    // TODO: undocumented
+    decorators: RactiveDecoratorPluginDic;
 
-	easing: { [key: string]: (x: number) => number; };
+    easing: RactiveEasingDic;
 
-	// TODO: undocumented
-	events: RactiveEventPlugins;
+    // TODO: undocumented
+    events: RactiveEventPluginDic;
 
-	// TODO: missing static properties documentation
-	partials: { [key: string]: any; };
+    // TODO: missing static properties documentation
+    partials: RactiveParsedTemplateDic;
 
-	// Undocumented method
-	Promise: RactivePromise;
+    // Undocumented method
+    Promise: RactivePromiseStatic;
 
-	// TODO: missing static properties documentation
-	transitions: RactiveTransitionPlugins;
+    // TODO: missing static properties documentation
+    transitions: RactiveTransitionPluginDic;
 }
 
 /**
  * The Ractive instance members
  */
-interface Ractive {
-	add(keypath: string, number?: number): RactivePromise;
-
-	animate(keypath: string, value: any, options?: RactiveAnimateOptions): RactiveAnimationPromise;
-
-	animate(map: Object, options?: RactiveAnimateOptions): RactiveAnimationPromise;
-
-	detach(): DocumentFragment;
-
+interface Ractive extends RactiveNewOptions {
 	find(selector: string): HTMLElement;
+    findComponent(name?: string): Ractive;
+    findAll(selector: string, options?: RactiveFindOptions): HTMLElement[];
+    findAllComponents(name: string, options?: RactiveFindOptions): Ractive[];
 
-	// live default false
-	findAll(selector: string, options?: { live: boolean }): HTMLElement[];
-
-	// live default false
-	findAllComponents(name: string, options?: { live: boolean }): Ractive[];
-	// TODO: maybe exist, in that case it is undocumented
-	// findAllComponents(): Ractive[]
-
-	findComponent(name?: string): Ractive;
-
-	fire(eventName: string, ...args: any[]): void; // TODO: void?
-
-	get(keypath: string): any;
-	get(): Object; // TODO: undocumented. or do it return function if ractive.data defined as function?
-
-	// TODO: target - Node or String or jQuery (see Valid selectors)
-	// TODO: anchor - Node or String or jQuery
-	insert(target: any, anchor?: any): void; // TODO: void?
-
-	// TODO: compare - Boolean or String or Function
-	merge(keypath: string, value: any[], options?: { compare: any }): RactivePromise;
-
-	// callback context Ractive
 	observe(keypath: string, callback: (newValue: any, oldValue: any, keypath: string) => void, options?: RactiveObserveOptions): RactiveObserve;
-	observe(map: Object, options?: RactiveObserveOptions): RactiveObserve;
+    //observe(map: { [keypath: string]: (newValue: any, oldValue: any, keypath: string) => void }, options?: RactiveObserveOptions): RactiveObserve;
+    on(eventName: string, handler: (event: RactiveEvent, arg: any) => void): RactiveObserve;
+    //on(map: { [eventName: string]: (event: RactiveEvent, arg: any) => void }): RactiveObserve;
+    off(eventName?: string, handler?: (event: RactiveEvent, arg: any) => void): void; // TODO: void?
+    fire(eventName: string, arg: any): void; // TODO: void?
 
-	// TODO: check handler type
-	off(eventName?: string, handler?: () => void): Ractive;
+    get(keypath: string): any;      
+    get(): any;                     
 
-	// handler context Ractive
-	on(eventName: string, handler: (event?: RactiveEvent, ...args: any[]) => void): RactiveObserve;
-	// TODO: undocumented
-	on(map: { [eventName: string]: (event?: RactiveEvent, ...args: any[]) => void }): RactiveObserve;
+    set(keypath: string, value: any): RactivePromise;
+    set(map: any): RactivePromise;
+    reset(data?: any): RactivePromise;
+    toggle(keypath: string): RactivePromise;
+    add(keypath: string, number?: number): RactivePromise;
 
-	// Since 0.5.5
-	pop(keypath: string): RactivePromise;
+    update(keypath?: string): RactivePromise;
+    updateModel(keypath?: string, cascade?: boolean): void; 	// Update out of sync two-way bindings, cascade defaults to false
 
-	// Since 0.5.5
-	push(keypath: string, value: any): RactivePromise;
+    animate(keypath: string, value: any, options?: RactiveAnimateOptions): RactiveAnimationPromise;
+    animate(map: any, options?: RactiveAnimateOptions): RactiveAnimationPromise;
 
-	// TODO: target - Node or String or jQuery (see Valid selectors)
-	render(target: any): void; // TODO: void?
+    pop(keypath: string): RactivePromise;
+    push(keypath: string, value: any): RactivePromise;   
+    shift(keypath: string): RactivePromise;
+    unshift(keypath: string, value: any): RactivePromise;
+    splice(keypath: string, index: number, removeCount: number, ...args: any[]): RactivePromise;
+    subtract(keypath: string, number?: number): RactivePromise;
+    merge(keypath: string, value: any[], options?: RactiveMergeOptions): RactivePromise;
 
-	reset(data?: Object): RactivePromise;
-
-	// Since 0.5.5
-	// TODO: undocumented, mentioned in ractive change log
-	resetTemplate(): void; // TODO: void?
-
-	set(keypath: string, value: any): RactivePromise;
-	set(map: Object): RactivePromise;
-
-	// Since 0.5.5
-	shift(keypath: string): RactivePromise;
-
-	// Since 0.5.5
-	splice(keypath: string, index: number, removeCount: number, ...add: any[]): RactivePromise;
-
-	subtract(keypath: string, number?: number): RactivePromise;
-
-	teardown(): RactivePromise;
-
-	toggle(keypath: string): RactivePromise;
-
+    // TODO: target - Node or String or jQuery (see Valid selectors)
+    // TODO: anchor - Node or String or jQuery
+    insert(target: any, anchor?: any): void;    // TODO: void?
+	// render(target: any): void;               // Cannot be called directly
+    teardown(): RactivePromise;
+    detach(): DocumentFragment;
 	toHTML(): string;
 
-	// Since 0.5.5
-	unshift(keypath: string, value: any): RactivePromise;
-
-	update(keypath?: string): RactivePromise;
-
-	/**
-	 * Update out of sync two-way bindings
-	 * @param keypath A string
-	 * @param cascade A boolean with default false
-	 */
-	updateModel(keypath?: string, cascade?: boolean): RactivePromise;
-
 	// Properties
-
-	nodes: Object;
-	partials: Object;
-	transitions: Object;
+	nodes: HTMLElementDic;
+	partials: StringDic;
+    transitions: RactiveTransitionPluginDic;
 }
 
 declare module "ractive" {
